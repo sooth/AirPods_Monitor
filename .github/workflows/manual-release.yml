@@ -17,6 +17,9 @@ on:
         type: boolean
         default: false
 
+permissions:
+  contents: write
+
 jobs:
   manual-release:
     runs-on: macos-latest
@@ -162,14 +165,6 @@ jobs:
         **💡 Pro tip**: Enable "Launch at Login" in preferences for seamless monitoring!
         EOF
         
-    - name: Create and push tag
-      run: |
-        VERSION="${{ github.event.inputs.version }}"
-        git config user.name github-actions
-        git config user.email github-actions@github.com
-        git tag -a "v$VERSION" -m "Release v$VERSION"
-        git push origin "v$VERSION"
-        
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
       with:
@@ -182,6 +177,7 @@ jobs:
           airpods-monitor.rb
         draft: false
         prerelease: ${{ github.event.inputs.prerelease }}
+        make_latest: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         

@@ -142,6 +142,19 @@ swift test
 make package && make install
 ```
 
+### **Creating Releases**
+
+```bash
+# Option 1: Automatic via git tag (Recommended)
+./scripts/create-github-release.sh 1.0.1
+
+# Option 2: Manual GitHub Actions
+# Go to GitHub Actions → Manual Release → Enter version
+
+# Option 3: Local preparation only
+./scripts/release.sh 1.0.1
+```
+
 ### **Development Tools**
 - **Bluetooth Explorer**: Use Xcode Additional Tools for codec validation
 - **System Profiler**: Test detection with `system_profiler SPBluetoothDataType -json`
