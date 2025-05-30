@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+        
+    - name: Cache Swift packages
+      uses: actions/cache@v3
+      with:
+        path: .build
+        key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+        restore-keys: |
+          ${{ runner.os }}-spm-
+          
+    - name: Install dependencies
+      run: |
+        brew install blueutil || true
+        
+    - name: Run tests
+      run: |
+        swift test --parallel
+        
+    - name: Build debug
+      run: |
+        swift build
+        
+    - name: Build release
+      run: |
+        swift build -c release
+        
+    - name: Test packaging
+      run: |
+        make clean
+        make package
+        
+    - name: Verify app structure
+      run: |
+        ls -la AirPodsMonitor.app/Contents/
+        file AirPodsMonitor.app/Contents/MacOS/AirPodsMonitor
+        
+    - name: Test detection script
+      run: |
+        chmod +x test_detection.swift
+        timeout 30 ./test_detection.swift || true

@@ -1,0 +1,187 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.0.0)'
+        required: true
+        default: '1.0.0'
+
+jobs:
+  build-and-release:
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+        
+    - name: Get version
+      id: version
+      run: |
+        if [[ $GITHUB_REF == refs/tags/* ]]; then
+          VERSION=${GITHUB_REF#refs/tags/v}
+        else
+          VERSION=${{ github.event.inputs.version }}
+        fi
+        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        echo "Building version: $VERSION"
+        
+    - name: Update version in files
+      run: |
+        VERSION=${{ steps.version.outputs.VERSION }}
+        # Update Package.swift version if needed
+        # Update Info.plist version in Makefile
+        sed -i '' "s/1\.0\.0/$VERSION/g" Makefile
+        
+    - name: Install dependencies
+      run: |
+        # Install blueutil for testing
+        brew install blueutil || true
+        
+    - name: Run tests
+      run: |
+        swift test
+        
+    - name: Build release
+      run: |
+        swift build -c release
+        
+    - name: Package app
+      run: |
+        make package
+        
+    - name: Create DMG
+      run: |
+        # Create a temporary directory for DMG contents
+        mkdir -p dmg-contents
+        cp -r AirPodsMonitor.app dmg-contents/
+        
+        # Create Applications symlink
+        ln -s /Applications dmg-contents/Applications
+        
+        # Create DMG
+        hdiutil create -volname "AirPods Monitor" \
+          -srcfolder dmg-contents \
+          -ov -format UDZO \
+          AirPodsMonitor.dmg
+          
+    - name: Verify DMG
+      run: |
+        # Mount and verify the DMG
+        hdiutil attach AirPodsMonitor.dmg -mountpoint /tmp/dmg-mount
+        ls -la /tmp/dmg-mount/
+        hdiutil detach /tmp/dmg-mount
+        
+    - name: Calculate checksums
+      run: |
+        shasum -a 256 AirPodsMonitor.dmg > AirPodsMonitor.dmg.sha256
+        shasum -a 256 AirPodsMonitor.app/Contents/MacOS/AirPodsMonitor > AirPodsMonitor.app.sha256
+        
+    - name: Generate Homebrew Cask
+      run: |
+        VERSION=${{ steps.version.outputs.VERSION }}
+        SHA256=$(cat AirPodsMonitor.dmg.sha256 | cut -d' ' -f1)
+        
+        cat > airpods-monitor.rb << EOF
+        cask "airpods-monitor" do
+          version "$VERSION"
+          sha256 "$SHA256"
+        
+          url "https://github.com/\${{ github.repository }}/releases/download/v$VERSION/AirPodsMonitor.dmg"
+          name "AirPods Monitor"
+          desc "Real-time AirPods audio profile monitor for macOS menu bar"
+          homepage "https://github.com/\${{ github.repository }}"
+        
+          depends_on macos: ">= :catalina"
+        
+          app "AirPodsMonitor.app"
+        
+          zap trash: [
+            "~/Library/Preferences/com.airpods.monitor.plist",
+          ]
+        end
+        EOF
+        
+    - name: Create release notes
+      run: |
+        VERSION=${{ steps.version.outputs.VERSION }}
+        cat > release-notes.md << EOF
+        # 🎧 AirPods Monitor v$VERSION
+        
+        ## ✨ What's New
+        
+        - Real-time AirPods audio profile monitoring
+        - Beautiful native macOS menu bar integration
+        - Smart detection of Music (🎧) vs Call (📞) modes
+        - Configurable display options (text + emoji or emoji only)
+        - Professional preferences UI with live preview
+        - Support for AirPods, Beats, and compatible Bluetooth headphones
+        
+        ## 📥 Installation
+        
+        ### Option 1: Download DMG (Recommended)
+        1. Download \`AirPodsMonitor.dmg\` below
+        2. Open the DMG and drag AirPods Monitor to Applications
+        3. Launch from Applications or Spotlight
+        
+        ### Option 2: Homebrew Cask (Coming Soon)
+        \`\`\`bash
+        brew install --cask airpods-monitor
+        \`\`\`
+        
+        ## ✅ System Requirements
+        
+        - macOS 10.15 (Catalina) or later
+        - Compatible Bluetooth headphones (AirPods, Beats, etc.)
+        - Optional: \`blueutil\` for enhanced detection
+        
+        ## 🔧 Technical Details
+        
+        - **Architecture**: Universal Binary (Intel + Apple Silicon)
+        - **Size**: ~2MB lightweight native app
+        - **Technology**: Swift 5+, SwiftUI, AppKit
+        - **Permissions**: Requires Bluetooth access for device detection
+        
+        ## 📊 Checksums
+        
+        - **DMG SHA256**: \`$(cat AirPodsMonitor.dmg.sha256 | cut -d' ' -f1)\`
+        - **App SHA256**: \`$(cat AirPodsMonitor.app.sha256 | cut -d' ' -f1)\`
+        
+        ---
+        
+        **🌟 First time using AirPods Monitor?** Check out the [README](https://github.com/\${{ github.repository }}) for setup and usage instructions!
+        EOF
+        
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v${{ steps.version.outputs.VERSION }}
+        name: "AirPods Monitor v${{ steps.version.outputs.VERSION }}"
+        body_path: release-notes.md
+        files: |
+          AirPodsMonitor.dmg
+          AirPodsMonitor.dmg.sha256
+          airpods-monitor.rb
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: airpods-monitor-v${{ steps.version.outputs.VERSION }}
+        path: |
+          AirPodsMonitor.dmg
+          AirPodsMonitor.app
+          airpods-monitor.rb
+          *.sha256

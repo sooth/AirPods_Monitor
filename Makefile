@@ -1,8 +1,9 @@
-.PHONY: build clean test install package
+.PHONY: build clean test install package dmg release
 
 APP_NAME = AirPodsMonitor
 BUILD_DIR = .build
 RELEASE_DIR = $(BUILD_DIR)/release
+VERSION ?= 1.0.0
 
 build:
 	swift build -c release
@@ -31,9 +32,9 @@ package: build
 	echo '	<key>CFBundleName</key>' >> $(APP_NAME).app/Contents/Info.plist
 	echo '	<string>$(APP_NAME)</string>' >> $(APP_NAME).app/Contents/Info.plist
 	echo '	<key>CFBundleVersion</key>' >> $(APP_NAME).app/Contents/Info.plist
-	echo '	<string>1.0.0</string>' >> $(APP_NAME).app/Contents/Info.plist
+	echo '	<string>$(VERSION)</string>' >> $(APP_NAME).app/Contents/Info.plist
 	echo '	<key>CFBundleShortVersionString</key>' >> $(APP_NAME).app/Contents/Info.plist
-	echo '	<string>1.0.0</string>' >> $(APP_NAME).app/Contents/Info.plist
+	echo '	<string>$(VERSION)</string>' >> $(APP_NAME).app/Contents/Info.plist
 	echo '	<key>CFBundlePackageType</key>' >> $(APP_NAME).app/Contents/Info.plist
 	echo '	<string>APPL</string>' >> $(APP_NAME).app/Contents/Info.plist
 	echo '	<key>LSUIElement</key>' >> $(APP_NAME).app/Contents/Info.plist
@@ -51,24 +52,41 @@ install: package
 	cp -r $(APP_NAME).app /Applications/
 
 dmg: package
-	hdiutil create -volname "$(APP_NAME)" -srcfolder $(APP_NAME).app -ov -format UDZO $(APP_NAME).dmg
+	mkdir -p dmg-contents
+	cp -r $(APP_NAME).app dmg-contents/
+	ln -s /Applications dmg-contents/Applications
+	hdiutil create -volname "$(APP_NAME)" -srcfolder dmg-contents -ov -format UDZO $(APP_NAME)-v$(VERSION).dmg
+	rm -rf dmg-contents
+	@echo "✅ Created $(APP_NAME)-v$(VERSION).dmg"
+
+release: clean test package dmg
+	@echo "🎉 Release v$(VERSION) ready!"
+	@echo "📦 Files created:"
+	@echo "  - $(APP_NAME).app"
+	@echo "  - $(APP_NAME)-v$(VERSION).dmg"
+	@echo ""
+	@echo "📋 Next steps:"
+	@echo "  1. Test the DMG: open $(APP_NAME)-v$(VERSION).dmg"
+	@echo "  2. Run GitHub Action 'Manual Release' with version $(VERSION)"
+	@echo "  3. Or use: ./scripts/release.sh $(VERSION)"
 
 homebrew-cask:
-	@echo "# Homebrew Cask Formula"
-	@echo "cask 'airpods-monitor' do"
-	@echo "  version '1.0.0'"
-	@echo "  sha256 :no_check"
-	@echo ""
-	@echo "  url 'https://github.com/yourusername/airpods-monitor/releases/download/v1.0.0/AirPodsMonitor.dmg'"
-	@echo "  name 'AirPods Monitor'"
-	@echo "  desc 'Real-time AirPods audio profile monitor for macOS menu bar'"
-	@echo "  homepage 'https://github.com/yourusername/airpods-monitor'"
-	@echo ""
-	@echo "  depends_on macos: '>= :catalina'"
-	@echo ""
-	@echo "  app 'AirPodsMonitor.app'"
-	@echo ""
-	@echo "  zap trash: ["
-	@echo "    '~/Library/Preferences/com.airpods.monitor.plist',"
-	@echo "  ]"
-	@echo "end"
+	@SHA256=$$(shasum -a 256 $(APP_NAME)-v$(VERSION).dmg 2>/dev/null | cut -d' ' -f1 || echo ":no_check"); \
+	echo "# Homebrew Cask Formula"; \
+	echo "cask 'airpods-monitor' do"; \
+	echo "  version '$(VERSION)'"; \
+	echo "  sha256 '$$SHA256'"; \
+	echo ""; \
+	echo "  url 'https://github.com/yourusername/airpods-monitor/releases/download/v$(VERSION)/AirPodsMonitor-v$(VERSION).dmg'"; \
+	echo "  name 'AirPods Monitor'"; \
+	echo "  desc 'Real-time AirPods audio profile monitor for macOS menu bar'"; \
+	echo "  homepage 'https://github.com/yourusername/airpods-monitor'"; \
+	echo ""; \
+	echo "  depends_on macos: '>= :catalina'"; \
+	echo ""; \
+	echo "  app 'AirPodsMonitor.app'"; \
+	echo ""; \
+	echo "  zap trash: ["; \
+	echo "    '~/Library/Preferences/com.airpods.monitor.plist',"; \
+	echo "  ]"; \
+	echo "end"
