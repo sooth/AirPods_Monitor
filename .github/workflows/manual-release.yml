@@ -79,25 +79,18 @@ jobs:
         echo "📦 Packaging app..."
         make package
         
-    - name: Create DMG
+    - name: Create app archive
       run: |
-        echo "💿 Creating DMG..."
-        mkdir -p dmg-contents
-        cp -r AirPodsMonitor.app dmg-contents/
-        ln -s /Applications dmg-contents/Applications
+        echo "📦 Creating app archive..."
+        zip -r AirPodsMonitor.app.zip AirPodsMonitor.app
         
-        hdiutil create -volname "AirPods Monitor" \
-          -srcfolder dmg-contents \
-          -ov -format UDZO \
-          AirPodsMonitor.dmg
-          
     - name: Generate checksums and cask
       run: |
         VERSION="${{ github.event.inputs.version }}"
         
         echo "🔐 Generating checksums..."
-        shasum -a 256 AirPodsMonitor.dmg > AirPodsMonitor.dmg.sha256
-        SHA256=$(cat AirPodsMonitor.dmg.sha256 | cut -d' ' -f1)
+        shasum -a 256 AirPodsMonitor.app.zip > AirPodsMonitor.app.zip.sha256
+        SHA256=$(cat AirPodsMonitor.app.zip.sha256 | cut -d' ' -f1)
         
         echo "🍺 Generating Homebrew Cask..."
         cat > airpods-monitor.rb << EOF
@@ -105,7 +98,7 @@ jobs:
           version "$VERSION"
           sha256 "$SHA256"
         
-          url "https://github.com/${{ github.repository }}/releases/download/v$VERSION/AirPodsMonitor.dmg"
+          url "https://github.com/${{ github.repository }}/releases/download/v$VERSION/AirPodsMonitor.app.zip"
           name "AirPods Monitor"
           desc "Real-time AirPods audio profile monitor for macOS menu bar"
           homepage "https://github.com/${{ github.repository }}"
@@ -139,8 +132,8 @@ jobs:
         ## 📥 Installation Options
         
         ### 🎯 Direct Download (Recommended)
-        1. Download \`AirPodsMonitor.dmg\` below
-        2. Open DMG and drag to Applications folder
+        1. Download \`AirPodsMonitor.app.zip\` below
+        2. Unzip and drag to Applications folder
         3. Launch and enjoy!
         
         ### 🍺 Homebrew (Copy the cask file)
@@ -155,7 +148,7 @@ jobs:
         - **Headphones**: AirPods, Beats, or compatible Bluetooth audio devices
         
         ## 🔐 Verification
-        - **DMG SHA256**: \`$(cat AirPodsMonitor.dmg.sha256 | cut -d' ' -f1)\`
+        - **ZIP SHA256**: \`$(cat AirPodsMonitor.app.zip.sha256 | cut -d' ' -f1)\`
         
         ## 🐛 Issues?
         - Check the [Troubleshooting Guide](https://github.com/${{ github.repository }}#troubleshooting)
@@ -172,8 +165,8 @@ jobs:
         name: "🎧 AirPods Monitor v${{ github.event.inputs.version }}"
         body_path: release-notes.md
         files: |
-          AirPodsMonitor.dmg
-          AirPodsMonitor.dmg.sha256
+          AirPodsMonitor.app.zip
+          AirPodsMonitor.app.zip.sha256
           airpods-monitor.rb
         draft: false
         prerelease: ${{ github.event.inputs.prerelease }}

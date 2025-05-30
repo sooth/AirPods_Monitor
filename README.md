@@ -43,11 +43,12 @@ brew install --cask airpods-monitor
 
 ### 📦 **Manual Installation**
 
-1. **Download** the latest release from [GitHub Releases](https://github.com/yourusername/airpods-monitor/releases)
-2. **Install** by dragging `AirPods Monitor.app` to your Applications folder
-3. **Launch** from Applications or Spotlight
-4. **Grant Permissions** if prompted (for Bluetooth access)
-5. **Enjoy** instant audio profile monitoring!
+1. **Download** `AirPodsMonitor.app.zip` from [GitHub Releases](https://github.com/yourusername/airpods-monitor/releases)
+2. **Unzip** the downloaded file
+3. **Drag** `AirPods Monitor.app` to your Applications folder
+4. **Launch** from Applications or Spotlight
+5. **Grant Permissions** if prompted (for Bluetooth access)
+6. **Enjoy** instant audio profile monitoring!
 
 ## Usage
 

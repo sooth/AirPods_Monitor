@@ -74,30 +74,20 @@ make package || {
 echo "✅ App packaged successfully"
 echo ""
 
-# Create DMG
-echo "💿 Creating DMG..."
-mkdir -p dmg-contents
-cp -r AirPodsMonitor.app dmg-contents/
-ln -s /Applications dmg-contents/Applications
-
-hdiutil create -volname "AirPods Monitor" \
-    -srcfolder dmg-contents \
-    -ov -format UDZO \
-    "AirPodsMonitor-v$VERSION.dmg" || {
-    echo "❌ DMG creation failed!"
+# Create ZIP
+echo "📦 Creating ZIP archive..."
+zip -r "AirPodsMonitor-v$VERSION.app.zip" AirPodsMonitor.app || {
+    echo "❌ ZIP creation failed!"
     exit 1
 }
 
-# Clean up
-rm -rf dmg-contents
-
-echo "✅ DMG created: AirPodsMonitor-v$VERSION.dmg"
+echo "✅ ZIP created: AirPodsMonitor-v$VERSION.app.zip"
 echo ""
 
 # Generate checksums
 echo "🔐 Generating checksums..."
-shasum -a 256 "AirPodsMonitor-v$VERSION.dmg" > "AirPodsMonitor-v$VERSION.dmg.sha256"
-SHA256=$(cat "AirPodsMonitor-v$VERSION.dmg.sha256" | cut -d' ' -f1)
+shasum -a 256 "AirPodsMonitor-v$VERSION.app.zip" > "AirPodsMonitor-v$VERSION.app.zip.sha256"
+SHA256=$(cat "AirPodsMonitor-v$VERSION.app.zip.sha256" | cut -d' ' -f1)
 
 echo "✅ SHA256: $SHA256"
 echo ""
@@ -109,7 +99,7 @@ cask "airpods-monitor" do
   version "$VERSION"
   sha256 "$SHA256"
 
-  url "https://github.com/yourusername/$REPO_NAME/releases/download/v$VERSION/AirPodsMonitor-v$VERSION.dmg"
+  url "https://github.com/yourusername/$REPO_NAME/releases/download/v$VERSION/AirPodsMonitor-v$VERSION.app.zip"
   name "AirPods Monitor"
   desc "Real-time AirPods audio profile monitor for macOS menu bar"
   homepage "https://github.com/yourusername/$REPO_NAME"
@@ -131,12 +121,12 @@ echo "🎉 Release v$VERSION prepared successfully!"
 echo ""
 echo "📋 Next Steps:"
 echo "1. Review the generated files:"
-echo "   - AirPodsMonitor-v$VERSION.dmg"
-echo "   - AirPodsMonitor-v$VERSION.dmg.sha256"
+echo "   - AirPodsMonitor-v$VERSION.app.zip"
+echo "   - AirPodsMonitor-v$VERSION.app.zip.sha256"
 echo "   - airpods-monitor-v$VERSION.rb"
 echo ""
-echo "2. Test the DMG manually:"
-echo "   open AirPodsMonitor-v$VERSION.dmg"
+echo "2. Test the ZIP manually:"
+echo "   unzip AirPodsMonitor-v$VERSION.app.zip && open AirPodsMonitor.app"
 echo ""
 echo "3. Create GitHub release:"
 echo "   - Go to GitHub Actions"

@@ -62,44 +62,32 @@ jobs:
       run: |
         make package
         
-    - name: Create DMG
+    - name: Create app archive
       run: |
-        # Create a temporary directory for DMG contents
-        mkdir -p dmg-contents
-        cp -r AirPodsMonitor.app dmg-contents/
+        # Create ZIP archive of the app
+        zip -r AirPodsMonitor.app.zip AirPodsMonitor.app
         
-        # Create Applications symlink
-        ln -s /Applications dmg-contents/Applications
-        
-        # Create DMG
-        hdiutil create -volname "AirPods Monitor" \
-          -srcfolder dmg-contents \
-          -ov -format UDZO \
-          AirPodsMonitor.dmg
-          
-    - name: Verify DMG
+    - name: Verify app archive
       run: |
-        # Mount and verify the DMG
-        hdiutil attach AirPodsMonitor.dmg -mountpoint /tmp/dmg-mount
-        ls -la /tmp/dmg-mount/
-        hdiutil detach /tmp/dmg-mount
+        # Verify the ZIP contents
+        unzip -l AirPodsMonitor.app.zip
         
     - name: Calculate checksums
       run: |
-        shasum -a 256 AirPodsMonitor.dmg > AirPodsMonitor.dmg.sha256
+        shasum -a 256 AirPodsMonitor.app.zip > AirPodsMonitor.app.zip.sha256
         shasum -a 256 AirPodsMonitor.app/Contents/MacOS/AirPodsMonitor > AirPodsMonitor.app.sha256
         
     - name: Generate Homebrew Cask
       run: |
         VERSION=${{ steps.version.outputs.VERSION }}
-        SHA256=$(cat AirPodsMonitor.dmg.sha256 | cut -d' ' -f1)
+        SHA256=$(cat AirPodsMonitor.app.zip.sha256 | cut -d' ' -f1)
         
         cat > airpods-monitor.rb << EOF
         cask "airpods-monitor" do
           version "$VERSION"
           sha256 "$SHA256"
         
-          url "https://github.com/\${{ github.repository }}/releases/download/v$VERSION/AirPodsMonitor.dmg"
+          url "https://github.com/\${{ github.repository }}/releases/download/v$VERSION/AirPodsMonitor.app.zip"
           name "AirPods Monitor"
           desc "Real-time AirPods audio profile monitor for macOS menu bar"
           homepage "https://github.com/\${{ github.repository }}"
@@ -131,9 +119,9 @@ jobs:
         
         ## 📥 Installation
         
-        ### Option 1: Download DMG (Recommended)
-        1. Download \`AirPodsMonitor.dmg\` below
-        2. Open the DMG and drag AirPods Monitor to Applications
+        ### Option 1: Download ZIP (Recommended)
+        1. Download \`AirPodsMonitor.app.zip\` below
+        2. Unzip and drag AirPods Monitor to Applications
         3. Launch from Applications or Spotlight
         
         ### Option 2: Homebrew Cask (Coming Soon)
@@ -156,7 +144,7 @@ jobs:
         
         ## 📊 Checksums
         
-        - **DMG SHA256**: \`$(cat AirPodsMonitor.dmg.sha256 | cut -d' ' -f1)\`
+        - **ZIP SHA256**: \`$(cat AirPodsMonitor.app.zip.sha256 | cut -d' ' -f1)\`
         - **App SHA256**: \`$(cat AirPodsMonitor.app.sha256 | cut -d' ' -f1)\`
         
         ---
@@ -171,8 +159,8 @@ jobs:
         name: "AirPods Monitor v${{ steps.version.outputs.VERSION }}"
         body_path: release-notes.md
         files: |
-          AirPodsMonitor.dmg
-          AirPodsMonitor.dmg.sha256
+          AirPodsMonitor.app.zip
+          AirPodsMonitor.app.zip.sha256
           airpods-monitor.rb
         draft: false
         prerelease: false

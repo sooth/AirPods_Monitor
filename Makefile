@@ -1,4 +1,4 @@
-.PHONY: build clean test install package dmg release
+.PHONY: build clean test install package zip release
 
 APP_NAME = AirPodsMonitor
 BUILD_DIR = .build
@@ -51,33 +51,29 @@ package: build
 install: package
 	cp -r $(APP_NAME).app /Applications/
 
-dmg: package
-	mkdir -p dmg-contents
-	cp -r $(APP_NAME).app dmg-contents/
-	ln -s /Applications dmg-contents/Applications
-	hdiutil create -volname "$(APP_NAME)" -srcfolder dmg-contents -ov -format UDZO $(APP_NAME)-v$(VERSION).dmg
-	rm -rf dmg-contents
-	@echo "✅ Created $(APP_NAME)-v$(VERSION).dmg"
+zip: package
+	zip -r $(APP_NAME)-v$(VERSION).app.zip $(APP_NAME).app
+	@echo "✅ Created $(APP_NAME)-v$(VERSION).app.zip"
 
-release: clean test package dmg
+release: clean test package zip
 	@echo "🎉 Release v$(VERSION) ready!"
 	@echo "📦 Files created:"
 	@echo "  - $(APP_NAME).app"
-	@echo "  - $(APP_NAME)-v$(VERSION).dmg"
+	@echo "  - $(APP_NAME)-v$(VERSION).app.zip"
 	@echo ""
 	@echo "📋 Next steps:"
-	@echo "  1. Test the DMG: open $(APP_NAME)-v$(VERSION).dmg"
+	@echo "  1. Test the ZIP: unzip $(APP_NAME)-v$(VERSION).app.zip"
 	@echo "  2. Run GitHub Action 'Manual Release' with version $(VERSION)"
 	@echo "  3. Or use: ./scripts/release.sh $(VERSION)"
 
 homebrew-cask:
-	@SHA256=$$(shasum -a 256 $(APP_NAME)-v$(VERSION).dmg 2>/dev/null | cut -d' ' -f1 || echo ":no_check"); \
+	@SHA256=$$(shasum -a 256 $(APP_NAME)-v$(VERSION).app.zip 2>/dev/null | cut -d' ' -f1 || echo ":no_check"); \
 	echo "# Homebrew Cask Formula"; \
 	echo "cask 'airpods-monitor' do"; \
 	echo "  version '$(VERSION)'"; \
 	echo "  sha256 '$$SHA256'"; \
 	echo ""; \
-	echo "  url 'https://github.com/yourusername/airpods-monitor/releases/download/v$(VERSION)/AirPodsMonitor-v$(VERSION).dmg'"; \
+	echo "  url 'https://github.com/yourusername/airpods-monitor/releases/download/v$(VERSION)/AirPodsMonitor-v$(VERSION).app.zip'"; \
 	echo "  name 'AirPods Monitor'"; \
 	echo "  desc 'Real-time AirPods audio profile monitor for macOS menu bar'"; \
 	echo "  homepage 'https://github.com/yourusername/airpods-monitor'"; \
