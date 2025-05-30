@@ -186,6 +186,11 @@ struct TimeoutError: Error {}
     }
     
     func determineAudioProfile(from codec: String) -> AudioProfile {
+        return determineAudioProfileFromCodec(codec) ?? determineProfileByAudioState()
+    }
+    
+    // Separate function for pure codec-based detection (for testing)
+    func determineAudioProfileFromCodec(_ codec: String) -> AudioProfile? {
         let codecLower = codec.lowercased()
         
         if codecLower.contains("aac") || codecLower.contains("a2dp") {
@@ -193,8 +198,7 @@ struct TimeoutError: Error {}
         } else if codecLower.contains("sco") || codecLower.contains("msbc") || codecLower.contains("hfp") {
             return .call
         } else {
-            // Fallback: try to determine based on system audio state
-            return determineProfileByAudioState()
+            return nil // Unknown codec
         }
     }
     
