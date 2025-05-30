@@ -50,6 +50,10 @@ jobs:
         # Install blueutil for testing
         brew install blueutil || true
         
+    - name: Clean build cache
+      run: |
+        swift package clean
+        
     - name: Run tests
       run: |
         swift test
