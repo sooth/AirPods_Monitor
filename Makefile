@@ -1,4 +1,4 @@
-.PHONY: build clean test install package zip release
+.PHONY: build clean test install package zip release icon
 
 APP_NAME = AirPodsMonitor
 BUILD_DIR = .build
@@ -11,16 +11,44 @@ build:
 test:
 	swift test
 
+icon:
+	@if [ ! -f "$(APP_NAME).icns" ]; then \
+		echo "⚠️  $(APP_NAME).icns not found. Please create it from airpodsmonitor.png"; \
+		echo "   1. Place your 1024x1024 PNG icon as 'airpodsmonitor.png'"; \
+		echo "   2. Run: make generate-icon"; \
+	else \
+		echo "✅ Icon file $(APP_NAME).icns already exists"; \
+	fi
+
+generate-icon:
+	@echo "🎨 Generating app icon from airpodsmonitor.png..."
+	mkdir -p $(APP_NAME).iconset
+	sips -z 16 16 airpodsmonitor.png --out $(APP_NAME).iconset/icon_16x16.png
+	sips -z 32 32 airpodsmonitor.png --out $(APP_NAME).iconset/icon_16x16@2x.png
+	sips -z 32 32 airpodsmonitor.png --out $(APP_NAME).iconset/icon_32x32.png
+	sips -z 64 64 airpodsmonitor.png --out $(APP_NAME).iconset/icon_32x32@2x.png
+	sips -z 128 128 airpodsmonitor.png --out $(APP_NAME).iconset/icon_128x128.png
+	sips -z 256 256 airpodsmonitor.png --out $(APP_NAME).iconset/icon_128x128@2x.png
+	sips -z 256 256 airpodsmonitor.png --out $(APP_NAME).iconset/icon_256x256.png
+	sips -z 512 512 airpodsmonitor.png --out $(APP_NAME).iconset/icon_256x256@2x.png
+	sips -z 512 512 airpodsmonitor.png --out $(APP_NAME).iconset/icon_512x512.png
+	sips -z 1024 1024 airpodsmonitor.png --out $(APP_NAME).iconset/icon_512x512@2x.png
+	iconutil -c icns $(APP_NAME).iconset --output $(APP_NAME).icns
+	rm -rf $(APP_NAME).iconset
+	@echo "✅ Created $(APP_NAME).icns"
+
 clean:
 	swift package clean
 	rm -rf $(BUILD_DIR)
 	rm -rf *.app
 	rm -rf *.dmg
+	rm -rf *.iconset
 
 package: build
 	mkdir -p $(APP_NAME).app/Contents/MacOS
 	mkdir -p $(APP_NAME).app/Contents/Resources
 	cp $(RELEASE_DIR)/$(APP_NAME) $(APP_NAME).app/Contents/MacOS/
+	cp $(APP_NAME).icns $(APP_NAME).app/Contents/Resources/
 	echo '<?xml version="1.0" encoding="UTF-8"?>' > $(APP_NAME).app/Contents/Info.plist
 	echo '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' >> $(APP_NAME).app/Contents/Info.plist
 	echo '<plist version="1.0">' >> $(APP_NAME).app/Contents/Info.plist
@@ -45,6 +73,8 @@ package: build
 	echo '	<true/>' >> $(APP_NAME).app/Contents/Info.plist
 	echo '	<key>LSMinimumSystemVersion</key>' >> $(APP_NAME).app/Contents/Info.plist
 	echo '	<string>10.15</string>' >> $(APP_NAME).app/Contents/Info.plist
+	echo '	<key>CFBundleIconFile</key>' >> $(APP_NAME).app/Contents/Info.plist
+	echo '	<string>$(APP_NAME).icns</string>' >> $(APP_NAME).app/Contents/Info.plist
 	echo '</dict>' >> $(APP_NAME).app/Contents/Info.plist
 	echo '</plist>' >> $(APP_NAME).app/Contents/Info.plist
 

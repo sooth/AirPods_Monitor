@@ -156,6 +156,19 @@ make package && make install
 ./scripts/release.sh 1.0.1
 ```
 
+### **Icon Management**
+
+```bash
+# Check if icon exists
+make icon
+
+# Generate icon from airpodsmonitor.png (1024x1024 PNG)
+make generate-icon
+
+# Package includes the app icon automatically
+make package
+```
+
 ### **Development Tools**
 - **Bluetooth Explorer**: Use Xcode Additional Tools for codec validation
 - **System Profiler**: Test detection with `system_profiler SPBluetoothDataType -json`

@@ -22,3 +22,6 @@ Package.resolved
 *.tmp
 *.temp
 *~
+
+# Icon generation
+*.iconset/
