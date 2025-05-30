@@ -43,7 +43,7 @@ brew install --cask airpods-monitor
 
 ### 📦 **Manual Installation**
 
-1. **Download** `AirPodsMonitor.app.zip` from [GitHub Releases](https://github.com/yourusername/airpods-monitor/releases)
+1. **Download** `AirPodsMonitor.app.zip` from [GitHub Releases](https://github.com/sooth/AirPods_Monitor/releases)
 2. **Unzip** the downloaded file
 3. **Drag** `AirPods Monitor.app` to your Applications folder
 4. **Launch** from Applications or Spotlight
@@ -111,8 +111,8 @@ The app uses two methods to detect audio profiles:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/airpods-monitor.git
-cd airpods-monitor
+git clone https://github.com/sooth/AirPods_Monitor.git
+cd AirPods_Monitor
 
 # Build with Swift Package Manager
 swift build -c release

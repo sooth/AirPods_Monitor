@@ -73,10 +73,10 @@ homebrew-cask:
 	echo "  version '$(VERSION)'"; \
 	echo "  sha256 '$$SHA256'"; \
 	echo ""; \
-	echo "  url 'https://github.com/yourusername/airpods-monitor/releases/download/v$(VERSION)/AirPodsMonitor-v$(VERSION).app.zip'"; \
+	echo "  url 'https://github.com/sooth/AirPods_Monitor/releases/download/v$(VERSION)/AirPodsMonitor-v$(VERSION).app.zip'"; \
 	echo "  name 'AirPods Monitor'"; \
 	echo "  desc 'Real-time AirPods audio profile monitor for macOS menu bar'"; \
-	echo "  homepage 'https://github.com/yourusername/airpods-monitor'"; \
+	echo "  homepage 'https://github.com/sooth/AirPods_Monitor'"; \
 	echo ""; \
 	echo "  depends_on macos: '>= :catalina'"; \
 	echo ""; \

@@ -6,7 +6,7 @@
 set -e
 
 VERSION=${1:-"1.0.0"}
-REPO_NAME="airpods-monitor"
+REPO_NAME="AirPods_Monitor"
 
 echo "🎧 AirPods Monitor Release Script"
 echo "================================="
@@ -99,10 +99,10 @@ cask "airpods-monitor" do
   version "$VERSION"
   sha256 "$SHA256"
 
-  url "https://github.com/yourusername/$REPO_NAME/releases/download/v$VERSION/AirPodsMonitor-v$VERSION.app.zip"
+  url "https://github.com/sooth/$REPO_NAME/releases/download/v$VERSION/AirPodsMonitor-v$VERSION.app.zip"
   name "AirPods Monitor"
   desc "Real-time AirPods audio profile monitor for macOS menu bar"
-  homepage "https://github.com/yourusername/$REPO_NAME"
+  homepage "https://github.com/sooth/$REPO_NAME"
 
   depends_on macos: ">= :catalina"
 
